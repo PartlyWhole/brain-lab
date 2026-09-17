@@ -1,5 +1,7 @@
 # Robot Brain Lab
 
+**Live: <https://partlywhole.github.io/brain-lab/>**
+
 A graphical Python learning game. A student first *is* the robot's memory —
 making objects, naming them, changing them by hand — then teaches the robot
 reusable methods, tests those methods on inputs they did not choose, and

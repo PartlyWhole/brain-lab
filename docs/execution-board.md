@@ -20,15 +20,22 @@ static artifact deployable to GitHub Pages.
 
 **Totals: 237 unit and semantic tests, 27 browser journeys. All passing.**
 
+## Published
+
+**<https://partlywhole.github.io/brain-lab/>** — repository
+`PartlyWhole/brain-lab`, project site, deployed by
+`.github/workflows/deploy.yml` from `main`.
+
+Verified on the live site, not just in CI: Python 3.14.2 boots from the
+published URL in 1576 ms, the wasm is served as `application/wasm`, a mission
+deep link loads and its setup state arrives from real Python.
+
 ## What remains before this is in front of a learner
 
-1. **Publication details are unresolved and deliberately not invented.** The
-   deployable artifact is verified; the GitHub owner/repository and root-vs-
-   project URL are not known. Nothing has been published.
-2. **Learner age and reading level are still unresolved.** Copy is short and
+1. **Learner age and reading level are still unresolved.** Copy is short and
    plain and text size is adjustable, but the reading level has not been set by
    anyone who knows the learner.
-3. **No learner pilot has happened.** Every claim recorded here is a product
+2. **No learner pilot has happened.** Every claim recorded here is a product
    check. M4 is where learning evidence starts.
 
 ## M0 evidence (closed)
@@ -119,7 +126,5 @@ re-driven afterwards; a unit test alone was not treated as proof.
 
 ## Open questions for the user (not blocking)
 
-- GitHub owner/repository, and root vs project site. Deployment config is
-  written to take either; nothing is invented.
 - Learner age and reading level. Recorded as unresolved; copy is written short
   and plain in the meantime.
