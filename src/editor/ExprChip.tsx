@@ -35,12 +35,69 @@ const SHAPES = [
   { id: 'call', label: 'how many / total', hint: 'len, sum, max, min' },
 ] as const
 
+/**
+ * Words for the operators.
+ *
+ * The visual method reads as a sentence — "weight is bigger than limit" — while
+ * the Python reveal shows `weight > limit`. Seeing the same instruction in both
+ * notations is the point of the reveal, so the visual side is written the way a
+ * child would say it out loud.
+ */
+const OPERATOR_WORDS: Record<string, string> = {
+  '>': 'is bigger than',
+  '<': 'is smaller than',
+  '>=': 'is at least',
+  '<=': 'is at most',
+  '==': 'is the same as',
+  '!=': 'is not the same as',
+  '+': 'plus',
+  '-': 'minus',
+  '*': 'times',
+  '//': 'divided by',
+  '%': 'remainder of',
+}
+
 export function ExprChip(props: ExprChipProps) {
   const { expr, problems, readOnly, role, onReplace } = props
   const [picking, setPicking] = useState(false)
   const problem = problems.find((p) => p.nodeId === expr.id)
 
   const open = () => { if (!readOnly) setPicking(true) }
+
+  const picker = picking ? (
+    <ShapePicker
+      expr={expr}
+      availableNames={props.availableNames}
+      onClose={() => setPicking(false)}
+      onChoose={(next) => { onReplace(expr.id, next); setPicking(false) }}
+    />
+  ) : null
+
+  // A comparison or a calculation reads as a phrase, so the operator sits
+  // *between* its operands and is itself the control that changes it. A
+  // leading wrapper chip would force "only if is weight > limit".
+  if (expr.kind === 'compare' || expr.kind === 'arith') {
+    return (
+      <span className="chip-wrap chip-wrap--infix">
+        <ExprChip {...props} expr={expr.left}
+          role={expr.kind === 'compare' ? 'the first thing' : 'the first number'} />
+        <span className="chip-wrap">
+          <button
+            type="button"
+            className={`chip chip--operator${problem ? ' chip--error' : ''}`}
+            onClick={open}
+            disabled={readOnly}
+            aria-label={`${OPERATOR_WORDS[expr.op] ?? expr.op}. Change this.`}
+          >
+            {OPERATOR_WORDS[expr.op] ?? expr.op}
+          </button>
+          {picker}
+        </span>
+        <ExprChip {...props} expr={expr.right}
+          role={expr.kind === 'compare' ? 'the second thing' : 'the second number'} />
+      </span>
+    )
+  }
 
   const label = describeChip(expr, role)
   const tone = expr.kind === 'hole' ? 'draft' : problem?.severity === 'error' ? 'error' : 'filled'
@@ -67,14 +124,7 @@ export function ExprChip(props: ExprChipProps) {
         </span>
       )}
 
-      {picking && (
-        <ShapePicker
-          expr={expr}
-          availableNames={props.availableNames}
-          onClose={() => setPicking(false)}
-          onChoose={(next) => { onReplace(expr.id, next); setPicking(false) }}
-        />
-      )}
+      {picker}
     </span>
   )
 }
@@ -88,22 +138,6 @@ function renderChildren(props: ExprChipProps) {
     case 'list':
       return expr.items.length === 0 ? null : (
         <span className="chip__children">{expr.items.map((e) => child(e, 'an item'))}</span>
-      )
-    case 'arith':
-      return (
-        <span className="chip__children">
-          {child(expr.left, 'the first number')}
-          <span className="chip__op" aria-hidden="true">{expr.op}</span>
-          {child(expr.right, 'the second number')}
-        </span>
-      )
-    case 'compare':
-      return (
-        <span className="chip__children">
-          {child(expr.left, 'the first thing')}
-          <span className="chip__op" aria-hidden="true">{expr.op}</span>
-          {child(expr.right, 'the second thing')}
-        </span>
       )
     case 'index':
       return (
@@ -133,8 +167,8 @@ function describeChip(expr: Expr, role?: string): string {
     case 'none': return 'None'
     case 'name': return expr.name || 'a name…'
     case 'list': return expr.items.length === 0 ? 'a new empty list' : 'a new list of'
-    case 'arith': return 'work out'
-    case 'compare': return 'is'
+    case 'arith':
+    case 'compare': return OPERATOR_WORDS[expr.op] ?? expr.op
     case 'index': return 'read'
     case 'call': return CALL_LABELS[expr.fn]
   }
@@ -206,6 +240,27 @@ function ShapePicker({
       <p className="picker__title" id={titleId}>
         {stage === 'shape' ? 'What goes here?' : 'Choose'}
       </p>
+
+      {stage === 'shape' && (expr.kind === 'compare' || expr.kind === 'arith') && (
+        <>
+          <p className="picker__section">Change the question</p>
+          <ul className="picker__list">
+            {(expr.kind === 'compare' ? COMPARE_OPS : ARITH_OPS).map((op) => (
+              <li key={op}>
+                <button
+                  type="button"
+                  aria-pressed={op === expr.op}
+                  onClick={() => onChoose({ ...expr, op } as Expr)}
+                >
+                  <span className="picker__label">{OPERATOR_WORDS[op] ?? op}</span>
+                  <span className="picker__hint">{op}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="picker__section">Or replace it entirely</p>
+        </>
+      )}
 
       {stage === 'shape' && (
         <ul className="picker__list">

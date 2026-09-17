@@ -112,6 +112,10 @@ re-driven afterwards; a unit test alone was not treated as proof.
     unwritten method, and one that never binds the answer name, are now drafts.
 11. The same "no instructions yet" sentence appeared in both the editor and the
     feedback strip — the duplicated-idea clutter the design warns against.
+12. A comparison read "only if is weight > limit", and changing `>` to `>=`
+    meant rebuilding the whole comparison. The operator now sits between its
+    operands, in words ("weight is bigger than limit"), and is itself the
+    control that changes it.
 
 ## Open questions for the user (not blocking)
 

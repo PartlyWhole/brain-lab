@@ -294,3 +294,24 @@
   cursor: pointer;
   align-self: flex-start;
 }
+
+/* A comparison or calculation reads as a phrase: operand, operator, operand. */
+.chip-wrap--infix { gap: var(--sp-1); flex-wrap: wrap; }
+
+.chip--operator {
+  background: var(--surface);
+  border-style: dashed;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.chip--operator:hover:not(:disabled) { background: var(--pip-soft); color: var(--pip-deep); }
+
+.picker__section {
+  margin: var(--sp-2) 0 var(--sp-1);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.picker__section:first-of-type { margin-top: 0; }
