@@ -1,6 +1,10 @@
 # Robot Brain Lab
 
-**Live: <https://partlywhole.github.io/brain-lab/>**
+**Memory Sandbox — <https://partlywhole.github.io/brain-lab/sandbox.html>**
+One screen. Drag an object into memory, drop a name on it, watch what happens.
+For teaching variable binding, object creation and operations, and nothing else.
+
+**The full lesson game — <https://partlywhole.github.io/brain-lab/>**
 
 A graphical Python learning game. A student first *is* the robot's memory —
 making objects, naming them, changing them by hand — then teaches the robot
@@ -12,6 +16,16 @@ Python, so sharing, mutation, rebinding and errors are true because CPython
 made them true.
 
 It is a static site with no backend, no accounts and no tracking.
+
+## The two pages
+
+| Page | What it is |
+|---|---|
+| `sandbox.html` | One screen: make objects, name them, operate on them. No missions, no grading, no saving. |
+| `index.html` | The mission-based game: manual memory puzzles, three student-built algorithms, playback and a Python reveal. |
+
+Both are built from the same verified runtime and the same memory renderer, so
+what they draw cannot disagree.
 
 ## Run it
 

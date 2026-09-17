@@ -16,6 +16,7 @@
 import type { Snapshot } from '../runtime/types'
 import type { BrainInteraction } from './BrainWorkspace'
 import { identityBadge, isContainer, isMutable, shortLabel, typeWord } from './layout'
+import { dropAttr } from './drag'
 import type { SlotLayout, TileLayout } from './layout'
 
 export interface ObjectTileProps {
@@ -86,6 +87,15 @@ function Slot({ tile, slot, snapshot, interaction }: {
     <button
       type="button"
       className="tile-slot"
+      // A slot is its own drop target: dropping here replaces what this slot
+      // refers to, which is a different operation from appending to the list.
+      data-drop={slot.selectable
+        ? dropAttr({ kind: 'slot', objectId: tile.objectId, index: slot.index })
+        : undefined}
+      data-drop-ok={slot.selectable && interaction.drag?.canDrop(
+        { kind: 'slot', objectId: tile.objectId, index: slot.index })}
+      data-drop-over={slot.selectable && interaction.drag?.isOver(
+        { kind: 'slot', objectId: tile.objectId, index: slot.index })}
       data-selectable={slot.selectable}
       data-selected={selected}
       data-pick={pickable}
@@ -129,6 +139,13 @@ export function ObjectTile({
       data-selected={selected}
       role="group"
       aria-label={`${typeWord(object)} ${identityBadge(tile.objectId)}`}
+      // The tile is a forgiving target: a name dropped anywhere on it binds,
+      // and an object dropped anywhere that is not a slot appends. The append
+      // strip below makes that the obvious aim; a slot row, which reads as a
+      // deliberate place, replaces what that one slot refers to.
+      data-drop={dropAttr({ kind: 'object', objectId: tile.objectId })}
+      data-drop-ok={interaction.drag?.canDrop({ kind: 'object', objectId: tile.objectId })}
+      data-drop-over={interaction.drag?.isOver({ kind: 'object', objectId: tile.objectId })}
     >
       <button
         type="button"
@@ -140,6 +157,12 @@ export function ObjectTile({
         tabIndex={interaction.activeKey === headKey ? 0 : -1}
         ref={(el) => interaction.register(headKey, el)}
         data-brain-key={headKey}
+        onPointerDown={(event) => interaction.drag?.start({
+          kind: 'object',
+          objectId: tile.objectId,
+          ref: reference,
+          label: shortLabel(snapshot, tile.objectId),
+        }, event)}
         onClick={() => interaction.activate(reference)}
       >
         <span className="tile-kind">
@@ -177,6 +200,26 @@ export function ObjectTile({
       )}
 
       {tile.truncated && <p className="tile-more">…more not shown</p>}
+
+      {/*
+        Appending needs its own target. A slot fills most of a non-empty list
+        tile, so without this the common action (add to the end) had the
+        smallest hit area and silently became "replace slot 0" instead.
+        It only exists while something droppable is in hand, so it costs no
+        layout space and is never mistaken for an empty slot — which the design
+        forbids drawing.
+      */}
+      {container && interaction.drag?.active
+        && interaction.drag.canDrop({ kind: 'object', objectId: tile.objectId }) && (
+        <div
+          className="tile-append"
+          data-drop={dropAttr({ kind: 'object', objectId: tile.objectId })}
+          data-drop-ok="true"
+          data-drop-over={interaction.drag.isOver({ kind: 'object', objectId: tile.objectId })}
+        >
+          add to the end
+        </div>
+      )}
 
       <p className="tile-foot" data-shared={tile.refCount > 1}>
         {highlighted && <span className="tile-changed">just changed</span>}

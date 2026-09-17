@@ -38,6 +38,17 @@ import {
 import type {
   BrainLayout, BrainReference, DraftName, ReferenceSources, TileOffsets, WorkAreaEntry,
 } from './layout'
+import { dropAttr, payloadLabel, type BrainDrag } from './drag'
+
+/** Used when the host has not enabled dragging, so nothing is ever a target. */
+const NO_DRAG: BrainDrag = {
+  state: null,
+  start: () => {},
+  canDrop: () => false,
+  isOver: () => false,
+  active: false,
+  message: null,
+}
 import './brain.css'
 
 export type { BrainReference } from './layout'
@@ -63,6 +74,25 @@ export interface BrainWorkspaceProps {
   selectionPrompt?: { message: string; accepts: readonly BrainReference['kind'][] } | null
   selectedRefs?: BrainReference[]
   readOnly?: boolean
+  /** What to say when there is nothing to show yet. */
+  emptyMessage?: string
+  /** Heading for the workspace. */
+  title?: string
+  /** Show the running/not-running badge. Off where nothing executes. */
+  showExecution?: boolean
+  /** Show the printed-output panel. Off where nothing can print. */
+  showOutput?: boolean
+  /** Keyboard help. Should describe what this context actually offers. */
+  hint?: string
+  /**
+   * The live drag engine, created by the host with `useBrainDrag`.
+   *
+   * The host owns it rather than the workspace, so controls outside the canvas
+   * — a palette, a bench — start drags through the same engine and behave
+   * identically to a drag that starts on a tile. Every drag also has a
+   * click-only equivalent; this is an addition, never the only way.
+   */
+  drag?: BrainDrag
 }
 
 /**
@@ -70,6 +100,8 @@ export interface BrainWorkspaceProps {
  * rather than rebuilt in each child, so selection and focus rules exist once.
  */
 export interface BrainInteraction {
+  /** Dragging, when the host enabled it. Absent means click-only. */
+  drag?: BrainDrag
   isSelected: (ref: BrainReference | null) => boolean
   isPickable: (ref: BrainReference | null) => boolean
   isBlocked: (ref: BrainReference | null) => boolean
@@ -169,7 +201,8 @@ function tileSentences(
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
 
-export function BrainWorkspace({
+export function BrainWorkspace(props: BrainWorkspaceProps) {
+  const {
   snapshot,
   workArea = EMPTY_WORK,
   output = '',
@@ -180,7 +213,7 @@ export function BrainWorkspace({
   selectionPrompt = null,
   selectedRefs = EMPTY_REFS,
   readOnly = false,
-}: BrainWorkspaceProps) {
+} = props
   const domId = useId().replace(/[^a-zA-Z0-9]/g, '')
   const nodes = useRef(new Map<string, HTMLElement>())
 
@@ -216,20 +249,33 @@ export function BrainWorkspace({
     [selectedRefs],
   )
   const accepts = selectionPrompt?.accepts
+  /**
+   * "Pickable" marks a valid destination for the thing currently being chosen,
+   * so it only means something while a choice is actually being made. Marking
+   * everything at rest ringed the whole workspace and told the student
+   * nothing; clicking still works on anything, with or without the ring.
+   */
   const isPickable = useCallback(
     (ref: BrainReference | null) =>
-      !!ref && !readOnly && !!onSelectReference && (!accepts || accepts.includes(ref.kind)),
+      !!ref && !readOnly && !!onSelectReference && !!accepts && accepts.includes(ref.kind),
     [readOnly, onSelectReference, accepts],
   )
   const isBlocked = useCallback(
     (ref: BrainReference | null) => !!ref && !readOnly && !!accepts && !accepts.includes(ref.kind),
     [readOnly, accepts],
   )
+  /**
+   * A click always reaches the host, which decides what it means. Pickability
+   * is a *styling* signal about what the current choice will accept — gating
+   * the click on it would make everything unclickable whenever no choice is
+   * in progress, which is exactly when picking something up has to work.
+   * A blocked reference is still refused, because that is a stated "not this".
+   */
   const activate = useCallback(
     (ref: BrainReference | null) => {
-      if (ref && isPickable(ref)) onSelectReference?.(ref)
+      if (ref && !readOnly && !isBlocked(ref)) onSelectReference?.(ref)
     },
-    [isPickable, onSelectReference],
+    [readOnly, isBlocked, onSelectReference],
   )
 
   const register = useCallback((key: string, element: HTMLElement | null) => {
@@ -356,31 +402,45 @@ export function BrainWorkspace({
     if (rove(event, 'objects', objectKeys, 'vertical')) event.preventDefault()
   }
 
+  const brainDrag = props.drag ?? NO_DRAG
+
   const interactionFor = (activeKey: string | null): BrainInteraction => ({
     isSelected, isPickable, isBlocked, activate, register, activeKey,
+    drag: props.drag,
   })
   const nameInteraction = interactionFor(activeName)
   const objectInteraction = interactionFor(activeObject)
   const workInteraction = interactionFor(activeWork)
 
   const nothingToShow = layout.tiles.length === 0 && layout.names.length === 0
+  const emptyMessage = props.emptyMessage
+    ?? 'The brain is empty. Nothing has been made yet.'
+  const title = props.title ?? 'Robot brain'
+  const showExecution = props.showExecution ?? true
+  const showOutput = props.showOutput ?? true
+  const hint = props.hint
+    ?? 'Arrow keys move. Enter picks. Hold Alt with an arrow key to slide a tile.'
 
   return (
-    <section className="brain" aria-label="The robot's brain">
+    <section className="brain" aria-label={title}>
       <div className="brain-bar">
-        <h2 className="brain-title">Robot brain</h2>
+        <h2 className="brain-title">{title}</h2>
 
-        <div role="status">
-          {executingCardId
-            ? (
-              <span className="brain-exec">
-                <span className="brain-exec-dot" aria-hidden="true" />
-                <span className="brain-exec-glyph" aria-hidden="true">▶</span>
-                Running {executingCardId}
-              </span>
-            )
-            : <span className="brain-idle"><span aria-hidden="true">■</span> Not running</span>}
-        </div>
+        {/* Nothing executes in a sandbox, so a "not running" badge there would
+            be answering a question nobody asked. */}
+        {showExecution && (
+          <div role="status">
+            {executingCardId
+              ? (
+                <span className="brain-exec">
+                  <span className="brain-exec-dot" aria-hidden="true" />
+                  <span className="brain-exec-glyph" aria-hidden="true">▶</span>
+                  Running {executingCardId}
+                </span>
+              )
+              : <span className="brain-idle"><span aria-hidden="true">■</span> Not running</span>}
+          </div>
+        )}
 
         <p className="brain-prompt" role="status" hidden={!selectionPrompt}>
           {selectionPrompt?.message}
@@ -388,15 +448,17 @@ export function BrainWorkspace({
 
         {readOnly && <p className="brain-readonly">Replay — picking is off</p>}
 
-        <p className="brain-hint">
-          Arrow keys move. Enter picks. Hold Alt with an arrow key to slide a tile.
-        </p>
+        <p className="brain-hint">{hint}</p>
       </div>
 
       <div className="brain-scroll">
         <div
           className="brain-canvas"
           style={{ width: layout.width, height: layout.height, minWidth: METRICS.minWidth }}
+          // Empty canvas accepts a newly made object.
+          data-drop={dropAttr({ kind: 'canvas' })}
+          data-drop-ok={brainDrag.canDrop({ kind: 'canvas' })}
+          data-drop-over={brainDrag.isOver({ kind: 'canvas' })}
         >
           <ReferenceArrows
             arrows={layout.arrows}
@@ -407,7 +469,7 @@ export function BrainWorkspace({
           />
 
           {nothingToShow && (
-            <p className="brain-nothing">The brain is empty. Nothing has been made yet.</p>
+            <p className="brain-nothing">{emptyMessage}</p>
           )}
 
           {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
@@ -485,7 +547,22 @@ export function BrainWorkspace({
         </div>
       </div>
 
-      <OutputPanel text={output} live={!readOnly} />
+      {showOutput && <OutputPanel text={output} live={!readOnly} />}
+
+      {brainDrag.state && (
+        <>
+          {/* The ghost must never be hit-tested, or it would shadow the target
+              directly under the pointer. */}
+          <div
+            className="drag-ghost"
+            style={{ left: brainDrag.state.x, top: brainDrag.state.y }}
+            aria-hidden="true"
+          >
+            {payloadLabel(brainDrag.state.payload)}
+          </div>
+          <p className="drag-say" role="status">{brainDrag.message}</p>
+        </>
+      )}
     </section>
   )
 }

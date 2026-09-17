@@ -748,11 +748,11 @@ describe('shared-list', () => {
 describe('rebind-vs-mutate', () => {
   const mission = manualMission('rebind-vs-mutate')
 
-  // append stages its None result as w1, so the new list lands in w2.
   const correct = [
     { op: 'append', target: name('crate'), value: int('3') },
+    // Appending parks nothing in the work area, so the new list is w1.
     { op: 'makeList', items: [int('9'), int('4')] },
-    { op: 'bind', name: 'spare', ref: work('w2') },
+    { op: 'bind', name: 'spare', ref: work('w1') },
   ]
 
   /** Rebuilds crate instead of growing it: hold is left behind. */

@@ -321,7 +321,7 @@ class Tracer(object):
         scopes = [{
             "id": "global",
             "kind": "global",
-            "label": "Brain",
+            "label": "Names",
             "parentId": None,
             "pairs": [(k, v) for k, v in self.globals_ns.items() if self._visible(k)],
         }]

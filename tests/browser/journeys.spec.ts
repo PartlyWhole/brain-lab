@@ -15,7 +15,9 @@ const BASE = process.env.VITE_BASE ?? '/robot-brain-lab/'
 
 /** The brain only shows real state once Python has started and replayed. */
 async function brainReady(page: Page) {
-  await expect(page.getByRole('region', { name: /robot.s brain/i })).toBeVisible()
+  // The region's accessible name matches its visible heading, so the two
+  // cannot drift apart for a screen reader.
+  await expect(page.getByRole('region', { name: /robot brain/i })).toBeVisible()
   await expect(page.getByText('The brain is empty. Nothing has been made yet.'))
     .toBeHidden({ timeout: 90_000 })
 }

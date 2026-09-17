@@ -524,3 +524,84 @@
   font-style: italic;
   color: var(--ink-faint);
 }
+
+/* -- dragging --------------------------------------------------------- */
+
+/* What is in hand. Never hit-tested, or it would shadow the drop target
+   directly under the pointer. */
+.drag-ghost {
+  position: fixed;
+  z-index: 200;
+  transform: translate(12px, 12px);
+  pointer-events: none;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: 999px;
+  background: var(--pip);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-lift);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drag-say {
+  position: fixed;
+  z-index: 200;
+  left: 50%;
+  bottom: var(--sp-4);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--fs-sm);
+  pointer-events: none;
+  box-shadow: var(--shadow-lift);
+}
+
+/* A place this can land. Dashed, so it reads as a target and not as a state
+   the object is already in. */
+[data-drop-ok='true'] {
+  outline: 2px dashed var(--pip);
+  outline-offset: 2px;
+}
+
+/* The one it would land on right now. */
+[data-drop-over='true'] {
+  outline: 3px solid var(--pip);
+  outline-offset: 2px;
+  background: var(--pip-soft);
+}
+
+.name-tag[data-dragging='true'] { opacity: 0.4; }
+
+/* While dragging, nothing should start a text selection. */
+.brain:has(.drag-ghost) { user-select: none; }
+
+/* The append target. Appears only while something droppable is in hand, so it
+   never reads as an empty slot the list already has. */
+.tile-append {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--pip);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--pip-deep);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.tile-append[data-drop-over='true'] {
+  border-style: solid;
+  background: var(--pip-soft);
+}

@@ -46,6 +46,12 @@ export function WorkArea({ chips, snapshot, stripY, interaction }: WorkAreaProps
             tabIndex={interaction.activeKey === key ? 0 : -1}
             ref={(el) => interaction.register(key, el)}
             data-brain-key={key}
+            onPointerDown={(event) => interaction.drag?.start({
+              kind: 'object',
+              objectId: chip.objectId,
+              ref: chip.reference,
+              label: target,
+            }, event)}
             onClick={() => interaction.activate(chip.reference)}
           >
             <span className="work-chip-label" aria-hidden="true">

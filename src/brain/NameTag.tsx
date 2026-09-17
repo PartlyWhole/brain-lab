@@ -60,6 +60,10 @@ export function NameTag({ tag, description, descriptionId, interaction }: NameTa
       tabIndex={interaction.activeKey === key ? 0 : -1}
       ref={(el) => interaction.register(key, el)}
       data-brain-key={key}
+      data-dragging={interaction.drag?.state?.payload.kind === 'name'
+        && interaction.drag.state.payload.name === tag.name}
+      onPointerDown={(event) =>
+        interaction.drag?.start({ kind: 'name', name: tag.name }, event)}
       onClick={() => interaction.activate(reference)}
     >
       <span className="name-tag-text">{tag.name}</span>

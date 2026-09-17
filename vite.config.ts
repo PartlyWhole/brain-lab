@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -17,6 +18,13 @@ export default defineConfig({
     format: 'es',
   },
   build: {
+    // Two independent pages: the lesson app, and the one-screen sandbox.
+    rollupOptions: {
+      input: {
+        index: fileURLToPath(new URL('./index.html', import.meta.url)),
+        sandbox: fileURLToPath(new URL('./sandbox.html', import.meta.url)),
+      },
+    },
     target: 'es2022',
     sourcemap: true,
     // The Pyodide wasm/stdlib are copied as-is from public/; only app code is

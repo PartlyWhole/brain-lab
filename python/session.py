@@ -176,6 +176,11 @@ class Session(object):
         obj = self.resolve(cmd.get("ref"))
         existed = name in self.bindings
         self.bindings[name] = obj
+        # The work area means "made, but not named yet". Once this object has a
+        # name it is no longer that, so the holding entry goes. Leaving it would
+        # draw a second reference to the object and bury the point of a mission
+        # about how many names reach one list.
+        self.work_area[:] = [e for e in self.work_area if e["object"] is not obj]
         return {
             "resultSlotId": None,
             "effect": "rebind" if existed else "bind",
@@ -190,10 +195,14 @@ class Session(object):
         value = self.resolve(cmd.get("value"))
         before = len(target)
         target.append(value)
-        # append changes the list and returns None; both are reported.
-        return {"resultSlotId": self._stage(None, "append result"),
+        # append changes the list and hands back None. Both matter, but the
+        # None is reported in words rather than parked in the work area: a
+        # None tile per append buried the list the lesson is about.
+        return {"resultSlotId": None,
                 "effect": "mutate",
-                "description": "Added one slot to the list: %d slot%s now, was %d."
+                "givesNone": True,
+                "description": "Added one slot to the list: %d slot%s now, was %d. "
+                               "Appending itself gives back None."
                                % (len(target), "" if len(target) == 1 else "s", before)}
 
     def _op_set_slot(self, cmd):
@@ -282,7 +291,7 @@ class Session(object):
             "scopes": [{
                 "id": "global",
                 "kind": "global",
-                "label": "Brain",
+                "label": "Names",
                 "parentId": None,
                 "bindings": [{"name": n, "objectId": self.registry.uid(o)}
                              for n, o in binding_pairs],
