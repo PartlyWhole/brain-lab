@@ -49,12 +49,12 @@ wherever the workflow runs.
 
 For a user or organisation site (`https://OWNER.github.io/`), set a repository
 variable `BASE_PATH` to `/`. For a project site
-(`https://OWNER.github.io/REPOSITORY/`) the default is already correct.
+(`https://partlywhole.github.io/brain-lab/`) the default is already correct.
 
 To check the production artifact locally exactly as Pages will serve it:
 
 ```bash
-VITE_BASE=/robot-brain-lab/ npm run build && npm run serve:subpath
+VITE_BASE=/brain-lab/ npm run build && npm run serve:subpath --base /brain-lab/
 ```
 
 ## How it fits together

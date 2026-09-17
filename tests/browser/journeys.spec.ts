@@ -10,6 +10,9 @@
 import { readFile } from 'node:fs/promises'
 import { test, expect, type Page } from '@playwright/test'
 
+/** The base path this artifact was built with; the deploy sets it per repo. */
+const BASE = process.env.VITE_BASE ?? '/robot-brain-lab/'
+
 /** The brain only shows real state once Python has started and replayed. */
 async function brainReady(page: Page) {
   await expect(page.getByRole('region', { name: /robot.s brain/i })).toBeVisible()
@@ -71,7 +74,11 @@ test.describe('getting around', () => {
     await expect(page.getByText(/Python 3\.\d+\.\d+, started in \d+ ms/)).toBeVisible({
       timeout: 90_000,
     })
-    await expect(page.getByText('/robot-brain-lab/', { exact: true })).toBeVisible()
+    // Whatever base this artifact was built with, the app must report it and
+    // resolve its runtime under it. Hardcoding one base would only ever test
+    // the developer's local choice.
+    await expect(page.getByText(BASE, { exact: true })).toBeVisible()
+    await expect(page.getByText(new RegExp(`${BASE}runtime/pyodide/$`))).toBeVisible()
   })
 })
 

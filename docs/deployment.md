@@ -31,7 +31,7 @@ lesson URL is derived from it.
 
 | Site | `VITE_BASE` |
 |---|---|
-| `https://OWNER.github.io/REPOSITORY/` | `/REPOSITORY/` (the workflow default) |
+| `https://partlywhole.github.io/brain-lab/` | `/brain-lab/` (derived from the repository name) |
 | `https://OWNER.github.io/` | `/` (set repository variable `BASE_PATH`) |
 
 Routing is hash-based (`#/mission/heavy-parcels`). Pages applies no rewrite
@@ -64,8 +64,8 @@ redeploys with exactly the runtime it was tested against.
 ## Verifying a build locally
 
 ```bash
-VITE_BASE=/robot-brain-lab/ npm run build
-npm run serve:subpath            # http://localhost:4178/robot-brain-lab/
+VITE_BASE=/brain-lab/ npm run build
+npm run serve:subpath -- --base /brain-lab/   # http://localhost:4178/brain-lab/
 ```
 
 `scripts/serve-subpath.mjs` serves `dist/` under a prefix with correct MIME
