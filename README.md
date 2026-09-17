@@ -27,7 +27,7 @@ cached; the runtime page at `#/diagnostics` reports the real measurement.
 ```bash
 npm run typecheck   # tsc over src, content, tests and tooling
 npm run test        # 233 unit and semantic tests, real Python via Pyodide
-npm run test:browser # 19 browser journeys against the production build
+npm run test:browser # 27 browser journeys against the production build
 ```
 
 `npm run test:browser` builds the site, serves it at a repository subpath, and

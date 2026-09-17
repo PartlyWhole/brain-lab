@@ -371,3 +371,58 @@ test.describe('recovering from trouble', () => {
     await expect(page.getByText('1 step so far')).toBeVisible()
   })
 })
+
+test.describe('every mission loads and is usable', () => {
+  // bind-a-name deliberately starts with an empty brain: making the very first
+  // object is the mission. The others hand the student a starting state.
+  const manual = [
+    { id: 'bind-a-name', startsEmpty: true },
+    { id: 'shared-list', startsEmpty: false },
+    { id: 'rebind-vs-mutate', startsEmpty: false },
+    { id: 'swap-keep-the-value', startsEmpty: false },
+  ]
+  const invent = ['heavy-parcels', 'heavy-parcels-repair', 'charge-total', 'strongest-battery']
+
+  for (const { id, startsEmpty } of manual) {
+    test(`${id} starts with a live brain and offers its tools`, async ({ page }) => {
+      const errors: string[] = []
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`./#/mission/${id}`)
+      await expect(page.getByRole('region', { name: /Pip.s brain/ })).toBeVisible()
+      await expect(page.locator('.tool').first()).toBeVisible()
+      if (startsEmpty) {
+        await expect(page.locator('.brain-nothing')).toBeVisible()
+      } else {
+        // The setup state must actually arrive from Python, not stay empty.
+        await expect(page.locator('.brain-nothing')).toBeHidden({ timeout: 90_000 })
+        await expect(page.locator('.name-tag').first()).toBeVisible()
+      }
+      expect(errors).toEqual([])
+    })
+  }
+
+  for (const id of invent) {
+    test(`${id} offers a palette and grades a method`, async ({ page }) => {
+      const errors: string[] = []
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`./#/mission/${id}`)
+      await expect(page.getByRole('region', { name: /Pip.s method/ })).toBeVisible()
+
+      // Every invention mission must offer at least one test case to try.
+      await expect(page.locator('#case-pick option').first()).toBeAttached()
+
+      // A method that is not finished must be refused, never silently run.
+      const testIt = page.getByRole('button', { name: /Test it on everything/ })
+      if (id === 'heavy-parcels-repair') {
+        // This one starts complete (but wrong), so it is gradeable at once.
+        await expect(testIt).toBeEnabled()
+      } else {
+        await expect(testIt).toBeDisabled()
+        // The editor says why, once. The feedback strip must not repeat it.
+        await expect(page.locator('.editor__empty')).toBeVisible()
+        await expect(page.locator('.mission__feedback .note')).toHaveCount(0)
+      }
+      expect(errors).toEqual([])
+    })
+  }
+})

@@ -198,9 +198,26 @@ export interface Problem {
  *
  * An unfilled operand is a *draft*, not a mistake: the editor says "still to
  * fill in" rather than marking the student wrong for not having finished yet.
+ *
+ * `answerName` is the name a finished method must bind. Without it, an empty
+ * method or one that never produces an answer would look runnable, and testing
+ * it would report a wall of failures instead of the one true reason: it has
+ * not been written yet.
  */
-export function validate(program: Program, knownNames: string[] = []): Problem[] {
+export function validate(
+  program: Program,
+  knownNames: string[] = [],
+  answerName?: string,
+): Problem[] {
   const problems: Problem[] = []
+
+  if (program.body.length === 0) {
+    problems.push({
+      nodeId: EMPTY_PROGRAM_NODE,
+      severity: 'draft',
+      message: 'Pip has no instructions yet.',
+    })
+  }
   // Names a method may read: the mission's inputs plus anything it binds, plus
   // loop names, since a loop name is bound by the loop itself.
   const bound = new Set(knownNames)
@@ -311,8 +328,27 @@ export function validate(program: Program, knownNames: string[] = []): Problem[]
     }
   }
   visit(program.body)
+
+  if (answerName && program.body.length > 0) {
+    let binds = false
+    walkStmts(program.body, (s) => {
+      if (s.kind === 'bind' && s.name === answerName) binds = true
+    })
+    if (!binds) {
+      problems.push({
+        nodeId: ANSWER_MISSING_NODE,
+        severity: 'draft',
+        message: `Nothing points ${answerName} at the result yet.`,
+      })
+    }
+  }
+
   return problems
 }
+
+/** Synthetic ids for problems that belong to the method as a whole. */
+export const EMPTY_PROGRAM_NODE = '__program_empty__'
+export const ANSWER_MISSING_NODE = '__answer_missing__'
 
 export function canRun(problems: Problem[]): boolean {
   return problems.length === 0

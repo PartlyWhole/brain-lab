@@ -205,3 +205,43 @@ describe('validation', () => {
     expect(validate(inside, ['xs'])).toEqual([])
   })
 })
+
+describe('a method that is not written yet', () => {
+  const empty: Program = { schemaVersion: 1, missionId: 'm', body: [] }
+
+  it('reports an empty method as a draft, so it cannot be tested', () => {
+    const problems = validate(empty, ['weights'], 'answer')
+    expect(canRun(problems)).toBe(false)
+    expect(problems[0].message).toBe('Pip has no instructions yet.')
+  })
+
+  it('reports a method that never binds the answer', () => {
+    const p: Program = {
+      schemaVersion: 1, missionId: 'm',
+      body: [bind('a', 'result', { kind: 'list', id: 'L', items: [] })],
+    }
+    const problems = validate(p, [], 'answer')
+    expect(canRun(problems)).toBe(false)
+    expect(problems.map((x) => x.message))
+      .toContain('Nothing points answer at the result yet.')
+  })
+
+  it('accepts a method that does bind the answer, including inside a block', () => {
+    const p: Program = {
+      schemaVersion: 1, missionId: 'm',
+      body: [
+        bind('a', 'result', { kind: 'list', id: 'L', items: [] }),
+        bind('b', 'answer', nm('result', 'nr')),
+      ],
+    }
+    expect(validate(p, [], 'answer')).toEqual([])
+  })
+
+  it('does not ask for an answer when the mission does not name one', () => {
+    const p: Program = {
+      schemaVersion: 1, missionId: 'm',
+      body: [bind('a', 'x', int(1))],
+    }
+    expect(validate(p)).toEqual([])
+  })
+})

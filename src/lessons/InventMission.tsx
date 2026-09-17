@@ -15,7 +15,7 @@ import type { Mission, InventGoal } from './schema'
 import type { Program } from '../program/types'
 import { emptyProgram } from '../program/types'
 import { emitProgram, EmitError } from '../program/emit'
-import { validate, canRun, type Problem } from '../program/edit'
+import { validate, canRun, EMPTY_PROGRAM_NODE, type Problem } from '../program/edit'
 import { MethodEditor } from '../editor/MethodEditor'
 import { CodeReveal } from '../editor/CodeReveal'
 import { BrainWorkspace } from '../brain/BrainWorkspace'
@@ -71,8 +71,8 @@ export function InventMission({ mission }: { mission: Mission }) {
   useAutosave(program, (p) => store.saveMethod(mission.id, p), 400, loaded)
 
   const problems: Problem[] = useMemo(
-    () => validate(program, goal.availableNames),
-    [program, goal.availableNames],
+    () => validate(program, goal.availableNames, goal.answerName),
+    [program, goal.availableNames, goal.answerName],
   )
   const ready = canRun(problems)
 
@@ -97,6 +97,12 @@ export function InventMission({ mission }: { mission: Mission }) {
   }, [])
 
   const chosenCase = goal.cases.find((c) => c.id === caseId) ?? goal.cases[0]
+
+  const reason = (() => {
+    const speakable = problems.filter((p) => p.nodeId !== EMPTY_PROGRAM_NODE)
+    if (speakable.length === 0) return null
+    return (speakable.find((p) => p.severity === 'error') ?? speakable[0]).message
+  })()
 
   const doRun = async () => {
     if (!emitted.ok || !chosenCase) return
@@ -246,13 +252,10 @@ export function InventMission({ mission }: { mission: Mission }) {
           </p>
         )}
 
-        {!ready && problems.length > 0 && (
-          <p className="note">
-            {problems.filter((p) => p.severity === 'draft').length > 0
-              ? 'Still some empty spaces to fill in.'
-              : problems[0].message}
-          </p>
-        )}
+        {/* Say the specific reason, once. The editor already shows its own
+            empty state, so repeating that sentence here would be the same idea
+            twice on one screen. */}
+        {!ready && reason && <p className="note">{reason}</p>}
 
         {failure && <p className="note note--bad">{failure}</p>}
 

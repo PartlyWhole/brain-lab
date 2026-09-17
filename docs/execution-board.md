@@ -18,7 +18,7 @@ static artifact deployable to GitHub Pages.
 | 5 | Lesson shell, playback, persistence | Lead | **Done** | 11 playback + 10 tool + 12 persistence tests; journeys |
 | 6 | Build, Pages workflow, docs | Lead | **Done** | subpath build verified in-browser; both workflows written |
 
-**Totals: 233 unit and semantic tests, 19 browser journeys. All passing.**
+**Totals: 237 unit and semantic tests, 27 browser journeys. All passing.**
 
 ## What remains before this is in front of a learner
 
@@ -107,6 +107,11 @@ re-driven afterwards; a unit test alone was not treated as proof.
    zooms as one piece.
 9. A scope label kept its default `<p>` margin while absolutely positioned and
    sat on top of the first name tag.
+10. An empty method counted as runnable, so "Test it on everything" would run
+    nothing and report a wall of failures instead of the one true reason. An
+    unwritten method, and one that never binds the answer name, are now drafts.
+11. The same "no instructions yet" sentence appeared in both the editor and the
+    feedback strip — the duplicated-idea clutter the design warns against.
 
 ## Open questions for the user (not blocking)
 
