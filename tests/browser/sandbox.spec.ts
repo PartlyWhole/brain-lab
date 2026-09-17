@@ -9,7 +9,7 @@ import type { Result } from 'axe-core'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 
 async function ready(page: Page) {
-  await page.goto('./sandbox.html')
+  await page.goto('./')
   await expect(page.locator('.sb__status')).toContainText(/Real Python 3\./, { timeout: 90_000 })
 }
 

@@ -1,28 +1,28 @@
-# Robot Brain Lab
+# Memory Sandbox
 
-**Memory Sandbox — <https://partlywhole.github.io/brain-lab/sandbox.html>**
-One screen. Drag an object into memory, drop a name on it, watch what happens.
-For teaching variable binding, object creation and operations, and nothing else.
+**<https://partlywhole.github.io/brain-lab/>**
 
-**The full lesson game — <https://partlywhole.github.io/brain-lab/>**
+One screen for teaching three things: **variable binding, object creation, and
+operations**. Drag an object into memory, drop a name on it, drop something
+onto a list, and watch what actually happens.
 
-A graphical Python learning game. A student first *is* the robot's memory —
-making objects, naming them, changing them by hand — then teaches the robot
-reusable methods, tests those methods on inputs they did not choose, and
-finally sees the same method written as Python.
+Every object is a real **Python 3.14** object running in a browser worker. The
+diagram is not a drawing of what Python would do — it is a rendering of what
+Python did. Two names on one list converge on one tile because they really are
+one object.
 
-The lab runs **real Python 3.14** in a browser worker. It does not simulate
-Python, so sharing, mutation, rebinding and errors are true because CPython
-made them true.
+Everything can be done by dragging or by clicking (pick up, put down), and it
+works on a touch tablet. No accounts, no backend, no saving.
 
-It is a static site with no backend, no accounts and no tracking.
+A larger mission-based lesson game is built from the same runtime and renderer
+and lives at [`/lessons.html`](https://partlywhole.github.io/brain-lab/lessons.html).
 
 ## The two pages
 
 | Page | What it is |
 |---|---|
-| `sandbox.html` | One screen: make objects, name them, operate on them. No missions, no grading, no saving. |
-| `index.html` | The mission-based game: manual memory puzzles, three student-built algorithms, playback and a Python reveal. |
+| `index.html` | **The sandbox.** One screen: make objects, name them, operate on them. No missions, no grading, no saving. |
+| `lessons.html` | The mission-based game: manual memory puzzles, three student-built algorithms, playback and a Python reveal. Nothing links to it from the sandbox; open it by URL. |
 
 Both are built from the same verified runtime and the same memory renderer, so
 what they draw cannot disagree.
@@ -34,23 +34,24 @@ npm install
 npm run dev
 ```
 
-The first visit to a mission downloads the Python runtime (about 13 MB,
-served compressed) and starts it in a worker. Startup is around 1.3 s once
-cached; the runtime page at `#/diagnostics` reports the real measurement.
+The first load downloads the Python runtime (about 13 MB, served compressed)
+and starts it in a worker; roughly 1.3 s once cached. The lesson game's
+diagnostics page (`lessons.html#/diagnostics`) reports the real measurement on
+your machine.
 
 ## Check it
 
 ```bash
 npm run typecheck   # tsc over src, content, tests and tooling
 npm run test        # 233 unit and semantic tests, real Python via Pyodide
-npm run test:browser # 27 browser journeys against the production build
+npm run test:browser # 38 browser journeys against the production build
 ```
 
 `npm run test:browser` builds the site, serves it at a repository subpath, and
-drives it in Chromium. It covers the manual-to-method journey, building a
-method from nothing, the repair journey, keyboard-only operation, save and
-restore, export/import, runtime failure and recovery, and automated
-accessibility.
+drives it in Chromium. It covers the sandbox by dragging and by clicking, the manual-to-method
+journey, building a method from nothing, the repair journey, keyboard-only
+operation, save and restore, export/import, runtime failure and recovery, and
+automated accessibility.
 
 ## Publish it
 
@@ -82,8 +83,9 @@ python/contracts.py   per-case grading and misconception diagnosis
 
 src/program/          the program tree, its edits, and the Python emitter
 src/runtime/          worker, client, and the JSON contract between them
-src/brain/            object tiles, name tags, reference arrows, pure layout
+src/brain/            object tiles, name tags, reference arrows, drag, layout
 src/editor/           nested method editor and read-only code reveal
+src/sandbox/          the one-screen sandbox
 src/lessons/          mission shells, tool palette, playback, hints
 src/persistence/      IndexedDB, export and import
 content/lessons/      the missions

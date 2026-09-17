@@ -24,27 +24,27 @@ async function audit(page: Page, context?: string) {
 }
 
 test('the mission list has no automated violations', async ({ page }) => {
-  await page.goto('./')
+  await page.goto('./lessons.html')
   await expect(page.getByRole('heading', { name: 'Robot Brain Lab' })).toBeVisible()
   expect(await audit(page)).toEqual([])
 })
 
 test('a manual mission with a live brain has no automated violations', async ({ page }) => {
-  await page.goto('./#/mission/shared-list')
+  await page.goto('./lessons.html#/mission/shared-list')
   await expect(page.getByText('The brain is empty. Nothing has been made yet.'))
     .toBeHidden({ timeout: 90_000 })
   expect(await audit(page)).toEqual([])
 })
 
 test('an invention mission with the editor and code reveal open has none', async ({ page }) => {
-  await page.goto('./#/mission/heavy-parcels-repair')
+  await page.goto('./lessons.html#/mission/heavy-parcels-repair')
   await page.getByRole('button', { name: 'show' }).click()
   await expect(page.locator('.code')).toBeVisible()
   expect(await audit(page)).toEqual([])
 })
 
 test('every interactive control can be reached and named', async ({ page }) => {
-  await page.goto('./#/mission/heavy-parcels-repair')
+  await page.goto('./lessons.html#/mission/heavy-parcels-repair')
   // Nothing may be focusable-but-nameless: that is a control a screen reader
   // announces as "button" and nothing else.
   const nameless = await page.evaluate(() => {
@@ -68,7 +68,7 @@ test('every interactive control can be reached and named', async ({ page }) => {
 })
 
 test('turning the text size up does not break the brain layout', async ({ page }) => {
-  await page.goto('./#/mission/shared-list')
+  await page.goto('./lessons.html#/mission/shared-list')
   await expect(page.getByText('The brain is empty. Nothing has been made yet.'))
     .toBeHidden({ timeout: 90_000 })
 

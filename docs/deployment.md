@@ -2,6 +2,9 @@
 
 ## What gets published
 
+Two pages: `index.html` is the one-screen Memory Sandbox, and `lessons.html`
+is the mission-based lesson game. They share the runtime and the renderer.
+
 `dist/` contains the app bundle plus `runtime/pyodide/`, a pinned copy of the
 Pyodide distribution. The site is fully self-hosted: nothing is fetched from a
 CDN at play time, so a build is reproducible and the lab does not break when

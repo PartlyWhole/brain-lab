@@ -52,27 +52,27 @@ async function commit(page: Page) {
 
 test.describe('getting around', () => {
   test('the mission list loads and links into a mission', async ({ page }) => {
-    await page.goto('./')
+    await page.goto('./lessons.html')
     await expect(page.getByRole('heading', { name: 'Robot Brain Lab' })).toBeVisible()
     await page.getByRole('link', { name: /One list, two names/ }).click()
-    await expect(page).toHaveURL(/#\/mission\/shared-list$/)
+    await expect(page).toHaveURL(/lessons\.html#\/mission\/shared-list$/)
     await expect(page.getByText('Two names can point at one list.')).toBeVisible()
   })
 
   test('a deep link survives a refresh, which is the point of hash routing', async ({ page }) => {
-    await page.goto('./#/mission/heavy-parcels')
+    await page.goto('./lessons.html#/mission/heavy-parcels')
     await expect(page.getByText('Pip must pick out the heavy parcels')).toBeVisible()
     await page.reload()
     await expect(page.getByText('Pip must pick out the heavy parcels')).toBeVisible()
   })
 
   test('an unknown mission says so instead of showing a blank page', async ({ page }) => {
-    await page.goto('./#/mission/not-a-mission')
+    await page.goto('./lessons.html#/mission/not-a-mission')
     await expect(page.getByText('Pip does not know that mission.')).toBeVisible()
   })
 
   test('the runtime page reports a real Python version from the subpath', async ({ page }) => {
-    await page.goto('./#/diagnostics')
+    await page.goto('./lessons.html#/diagnostics')
     await expect(page.getByText(/Python 3\.\d+\.\d+, started in \d+ ms/)).toBeVisible({
       timeout: 90_000,
     })
@@ -86,7 +86,7 @@ test.describe('getting around', () => {
 
 test.describe('a manual mission, end to end', () => {
   test('two names on one list, and a lamp that arrives through both', async ({ page }) => {
-    await page.goto('./#/mission/shared-list')
+    await page.goto('./lessons.html#/mission/shared-list')
     await brainReady(page)
 
     // The setup list is there, with two real slots and no spare capacity.
@@ -128,7 +128,7 @@ test.describe('a manual mission, end to end', () => {
   })
 
   test('undo takes back one step and the brain agrees', async ({ page }) => {
-    await page.goto('./#/mission/shared-list')
+    await page.goto('./lessons.html#/mission/shared-list')
     await brainReady(page)
 
     await useTool(page, 'Make some text')
@@ -142,7 +142,7 @@ test.describe('a manual mission, end to end', () => {
   })
 
   test('work survives a reload', async ({ page }) => {
-    await page.goto('./#/mission/shared-list')
+    await page.goto('./lessons.html#/mission/shared-list')
     await brainReady(page)
 
     await useTool(page, 'Follow a name')
@@ -164,7 +164,7 @@ test.describe('a manual mission, end to end', () => {
 
 test.describe('an invention mission: repair a method that runs but is wrong', () => {
   test('a two-match input exposes the bug, and the repair makes it pass', async ({ page }) => {
-    await page.goto('./#/mission/heavy-parcels-repair')
+    await page.goto('./lessons.html#/mission/heavy-parcels-repair')
 
     // The faulty method is already there: result = [weight] inside the if.
     const bug = page.locator('[data-card-id="hpr-bug"]')
@@ -203,7 +203,7 @@ test.describe('an invention mission: repair a method that runs but is wrong', ()
 
   test('the code reveal matches the repaired method and highlights the running line',
     async ({ page }) => {
-      await page.goto('./#/mission/heavy-parcels-repair')
+      await page.goto('./lessons.html#/mission/heavy-parcels-repair')
       await page.getByRole('button', { name: 'show' }).click()
 
       const code = page.locator('.code')
@@ -223,7 +223,7 @@ test.describe('an invention mission: repair a method that runs but is wrong', ()
 
 test.describe('building a method from nothing', () => {
   test('a student can construct charge-total and it passes fresh cases', async ({ page }) => {
-    await page.goto('./#/mission/charge-total')
+    await page.goto('./lessons.html#/mission/charge-total')
     const editor = page.getByRole('region', { name: /Pip.s method/ })
     await expect(editor).toContainText('Pip has no instructions yet')
 
@@ -298,7 +298,7 @@ test.describe('building a method from nothing', () => {
 
 test.describe('the interaction paths a student may be limited to', () => {
   test('a manual mission can be driven by keyboard alone', async ({ page }) => {
-    await page.goto('./#/mission/shared-list')
+    await page.goto('./lessons.html#/mission/shared-list')
     await brainReady(page)
 
     // Reach the tool by tabbing, and activate it with the keyboard.
@@ -317,7 +317,7 @@ test.describe('the interaction paths a student may be limited to', () => {
   })
 
   test('arrow keys rove within the names region without leaving it', async ({ page }) => {
-    await page.goto('./#/mission/shared-list')
+    await page.goto('./lessons.html#/mission/shared-list')
     await brainReady(page)
     await nameTag(page, 'supplies').focus()
     await page.keyboard.press('ArrowDown')
@@ -329,7 +329,7 @@ test.describe('the interaction paths a student may be limited to', () => {
 test.describe('recovering from trouble', () => {
   test('stopping a runaway method leaves the lab usable and the method intact',
     async ({ page }) => {
-      await page.goto('./#/diagnostics')
+      await page.goto('./lessons.html#/diagnostics')
       await expect(page.getByText(/Python 3\./)).toBeVisible({ timeout: 90_000 })
 
       await page.getByRole('button', { name: 'Run a runaway loop' }).click()
@@ -344,7 +344,7 @@ test.describe('recovering from trouble', () => {
     })
 
   test('export writes a file and import brings the work back', async ({ page }) => {
-    await page.goto('./#/mission/shared-list')
+    await page.goto('./lessons.html#/mission/shared-list')
     await brainReady(page)
     await page.getByRole('button', { name: 'Follow a name' }).click()
     await nameTag(page, 'supplies').click()
@@ -396,7 +396,7 @@ test.describe('every mission loads and is usable', () => {
     test(`${id} starts with a live brain and offers its tools`, async ({ page }) => {
       const errors: string[] = []
       page.on('pageerror', (e) => errors.push(e.message))
-      await page.goto(`./#/mission/${id}`)
+      await page.goto(`./lessons.html#/mission/${id}`)
       await expect(page.getByRole('region', { name: /Pip.s brain/ })).toBeVisible()
       await expect(page.locator('.tool').first()).toBeVisible()
       if (startsEmpty) {
@@ -414,7 +414,7 @@ test.describe('every mission loads and is usable', () => {
     test(`${id} offers a palette and grades a method`, async ({ page }) => {
       const errors: string[] = []
       page.on('pageerror', (e) => errors.push(e.message))
-      await page.goto(`./#/mission/${id}`)
+      await page.goto(`./lessons.html#/mission/${id}`)
       await expect(page.getByRole('region', { name: /Pip.s method/ })).toBeVisible()
 
       // Every invention mission must offer at least one test case to try.

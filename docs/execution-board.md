@@ -22,7 +22,8 @@ static artifact deployable to GitHub Pages.
 
 ## Published
 
-**<https://partlywhole.github.io/brain-lab/>** — repository
+**<https://partlywhole.github.io/brain-lab/>** — the Memory Sandbox, and
+**`/lessons.html`** the mission game. Repository
 `PartlyWhole/brain-lab`, project site, deployed by
 `.github/workflows/deploy.yml` from `main`.
 

@@ -18,11 +18,12 @@ export default defineConfig({
     format: 'es',
   },
   build: {
-    // Two independent pages: the lesson app, and the one-screen sandbox.
+    // Two independent pages. The one-screen sandbox is the root; the
+    // mission-based lesson game lives alongside it.
     rollupOptions: {
       input: {
         index: fileURLToPath(new URL('./index.html', import.meta.url)),
-        sandbox: fileURLToPath(new URL('./sandbox.html', import.meta.url)),
+        lessons: fileURLToPath(new URL('./lessons.html', import.meta.url)),
       },
     },
     target: 'es2022',
