@@ -128,6 +128,15 @@
 
 .brain-canvas {
   position: relative;
+  /*
+   * The layout inside this canvas is computed in absolute pixels by layout.ts,
+   * so letting --text-scale grow the fonts alone would make labels collide
+   * with the boxes around them. Instead the canvas resets --text-scale for its
+   * own subtree (fonts return to their base size) and the whole canvas is
+   * zoomed as one piece, so positions and text grow together.
+   */
+  --text-scale: 1;
+  zoom: var(--brain-zoom, 1);
 }
 
 .brain-layer {
@@ -165,8 +174,12 @@
 
 .brain-scope {
   position: absolute;
+  /* A <p> keeps its default margin even when absolutely positioned, which
+     pushed this label down onto the first name tag by ~16px. */
+  margin: 0;
   display: flex;
-  align-items: flex-end;
+  /* Centred, not bottom-aligned: flush-bottom text sat on the first name tag. */
+  align-items: center;
   font-size: var(--fs-xs);
   font-weight: 800;
   letter-spacing: 0.04em;

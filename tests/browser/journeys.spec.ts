@@ -7,6 +7,7 @@
  * Booting CPython in wasm is genuinely slow, so the waits here are real cost,
  * not flake padding.
  */
+import { readFile } from 'node:fs/promises'
 import { test, expect, type Page } from '@playwright/test'
 
 /** The brain only shows real state once Python has started and replayed. */
@@ -209,4 +210,164 @@ test.describe('an invention mission: repair a method that runs but is wrong', ()
       await page.getByRole('button', { name: 'Step ▶' }).click()
       await expect(page.locator('.code__line--current')).toHaveCount(1)
     })
+})
+
+test.describe('building a method from nothing', () => {
+  test('a student can construct charge-total and it passes fresh cases', async ({ page }) => {
+    await page.goto('./#/mission/charge-total')
+    const editor = page.getByRole('region', { name: /Pip.s method/ })
+    await expect(editor).toContainText('Pip has no instructions yet')
+
+    /**
+     * Insertion points nest, so a flat nth() would reach inside a loop body.
+     * `topLevel` is the list that is a direct child of the editor; `insideLoop`
+     * is the one inside the loop's own block.
+     */
+    const topLevel = editor.locator('> .stmt-list > .stmt-list__items')
+    const addFirst = async (list: ReturnType<Page['locator']>, card: RegExp) => {
+      await list.locator('xpath=..').locator('> .insert').getByRole('button').click()
+      await page.getByRole('button', { name: card }).click()
+    }
+    const addLast = async (list: ReturnType<Page['locator']>, card: RegExp) => {
+      await list.locator('> li').last().locator('> .insert').getByRole('button').click()
+      await page.getByRole('button', { name: card }).click()
+    }
+
+    // total = 0
+    await addFirst(topLevel, /Point a name at something/)
+    const first = topLevel.locator('> li').nth(0).locator('.card--bind').first()
+    await first.getByLabel('The name to point').fill('total')
+    await first.getByRole('button', { name: /a value/ }).click()
+    await page.locator('.picker').getByRole('button', { name: 'a number' }).click()
+    await page.getByLabel('Which number?').fill('0')
+    await page.locator('.picker').getByRole('button', { name: 'Use it' }).click()
+
+    // for charge in charges:
+    await addLast(topLevel, /For each item/)
+    const loop = editor.locator('.card--for').first()
+    await loop.getByRole('button', { name: /a list/ }).click()
+    await pickName(page, 'charges')
+    await loop.getByLabel('The name for each item').fill('charge')
+
+    // total = total + charge, inside the loop
+    const insideLoop = loop.locator('> .card__block > .stmt-list > .stmt-list__items')
+    await addFirst(insideLoop, /Point a name at something/)
+    const accumulate = insideLoop.locator('.card--bind').first()
+    await accumulate.getByLabel('The name to point').fill('total')
+    await accumulate.getByRole('button', { name: /a value/ }).click()
+    await page.locator('.picker').getByRole('button', { name: 'add or subtract' }).click()
+    await accumulate.getByRole('button', { name: /the first number/ }).click()
+    await pickName(page, 'total')
+    await accumulate.getByRole('button', { name: /the second number/ }).click()
+    await pickName(page, 'charge')
+
+    // answer = total, AFTER the loop, not inside it.
+    await addLast(topLevel, /Point a name at something/)
+    const last = topLevel.locator('> li').last().locator('> .card--bind')
+    await last.getByLabel('The name to point').fill('answer')
+    await last.getByRole('button', { name: /a value/ }).click()
+    await pickName(page, 'total')
+
+    // The Python reveal must be exactly this method, in this order. Checking
+    // only that the lines appear would pass a method with the last binding
+    // trapped inside the loop, which is a different and wrong method.
+    await page.getByRole('button', { name: 'show' }).click()
+    // The indent on line 3 is load-bearing: it is what says the accumulation
+    // happens inside the loop and the binding on line 4 happens after it.
+    await expect(page.locator('.code__lines')).toHaveText(
+      ['1', 'total = 0',
+        '2', 'for charge in charges:',
+        '3', '    total = total + charge',
+        '4', 'answer = total'].join(''),
+    )
+
+    // And it must survive inputs the student never chose, including empty.
+    await page.getByRole('button', { name: /Test it on everything/ }).click()
+    await expect(page.locator('.report--good')).toBeVisible({ timeout: 90_000 })
+  })
+})
+
+test.describe('the interaction paths a student may be limited to', () => {
+  test('a manual mission can be driven by keyboard alone', async ({ page }) => {
+    await page.goto('./#/mission/shared-list')
+    await brainReady(page)
+
+    // Reach the tool by tabbing, and activate it with the keyboard.
+    await page.getByRole('button', { name: 'Follow a name' }).focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByText('Getting ready — nothing has happened yet')).toBeVisible()
+
+    // Move into the names region and pick with Enter, no mouse involved.
+    await nameTag(page, 'supplies').focus()
+    await page.keyboard.press('Enter')
+    await page.getByRole('button', { name: 'Do it', exact: true }).focus()
+    await page.keyboard.press('Enter')
+
+    await expect(page.getByText('1 step so far')).toBeVisible()
+    await expect(page.locator('[data-brain-key^="work"]')).toHaveCount(1)
+  })
+
+  test('arrow keys rove within the names region without leaving it', async ({ page }) => {
+    await page.goto('./#/mission/shared-list')
+    await brainReady(page)
+    await nameTag(page, 'supplies').focus()
+    await page.keyboard.press('ArrowDown')
+    const focused = await page.evaluate(() => document.activeElement?.className ?? '')
+    expect(focused).toContain('name-tag')
+  })
+})
+
+test.describe('recovering from trouble', () => {
+  test('stopping a runaway method leaves the lab usable and the method intact',
+    async ({ page }) => {
+      await page.goto('./#/diagnostics')
+      await expect(page.getByText(/Python 3\./)).toBeVisible({ timeout: 90_000 })
+
+      await page.getByRole('button', { name: 'Run a runaway loop' }).click()
+      await expect(page.getByText(/stopped on the step budget/)).toBeVisible({ timeout: 90_000 })
+
+      await page.getByRole('button', { name: 'Hard stop' }).click()
+      // A fresh runtime must come back without a reload.
+      await expect(page.getByText(/Python 3\.\d+\.\d+, started in \d+ ms/))
+        .toBeVisible({ timeout: 90_000 })
+      await page.getByRole('button', { name: 'Run heavy-parcels fixture' }).click()
+      await expect(page.getByText('answer → [8, 9]')).toBeVisible({ timeout: 90_000 })
+    })
+
+  test('export writes a file and import brings the work back', async ({ page }) => {
+    await page.goto('./#/mission/shared-list')
+    await brainReady(page)
+    await page.getByRole('button', { name: 'Follow a name' }).click()
+    await nameTag(page, 'supplies').click()
+    await page.getByRole('button', { name: 'Do it', exact: true }).click()
+    await expect(page.getByText('1 step so far')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Save file' }).click()
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Export my work' }).click(),
+    ])
+    expect(download.suggestedFilename()).toMatch(/^robot-brain-lab-\d{4}-\d{2}-\d{2}\.json$/)
+
+    const file = await download.path()
+    const bundle = JSON.parse(await readFile(file, 'utf8')) as {
+      format: string
+      progress: { missionId: string; commands: unknown[] }[]
+    }
+    expect(bundle.format).toBe('robot-brain-lab/export')
+    expect(bundle.progress.find((p) => p.missionId === 'shared-list')!.commands).toHaveLength(1)
+
+    // Now clear the browser's storage and bring the work back from that file.
+    await page.evaluate(() => indexedDB.deleteDatabase('robot-brain-lab'))
+    await page.reload()
+    await brainReady(page)
+    await expect(page.getByText('0 steps so far')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Save file' }).click()
+    await page.setInputFiles('input[type=file]', file)
+    await expect(page.getByText(/Brought back/)).toBeVisible()
+    await page.reload()
+    await brainReady(page)
+    await expect(page.getByText('1 step so far')).toBeVisible()
+  })
 })

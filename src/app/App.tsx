@@ -18,13 +18,26 @@ import './shell.css'
 export function App() {
   const route = useRoute()
   const [scale, setScale] = useState(() => {
-    const saved = Number(localStorage.getItem('rbl:text-scale'))
-    return Number.isFinite(saved) && saved >= 1 ? saved : 1
+    try {
+      const saved = Number(localStorage.getItem('rbl:text-scale'))
+      return Number.isFinite(saved) && saved >= 1 && saved <= 1.6 ? saved : 1
+    } catch {
+      // Private windows and blocked site data throw on access, not on read.
+      return 1
+    }
   })
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--text-scale', String(scale))
-    localStorage.setItem('rbl:text-scale', String(scale))
+    const root = document.documentElement
+    root.style.setProperty('--text-scale', String(scale))
+    // The brain canvas zooms as a whole instead of scaling its fonts; see the
+    // comment on .brain-canvas in src/brain/brain.css.
+    root.style.setProperty('--brain-zoom', String(scale))
+    try {
+      localStorage.setItem('rbl:text-scale', String(scale))
+    } catch {
+      // A browser with storage blocked still gets the setting for this visit.
+    }
   }, [scale])
 
   const mission = route.name === 'mission'

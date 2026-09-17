@@ -87,24 +87,27 @@ function StatementList(
   },
 ) {
   const { body, depth, readOnly } = props
+  // An <ol> may only contain <li>, so the leading insertion point and the
+  // spoken summary live outside it. Otherwise a screen reader stops treating
+  // the instructions as a list at all.
   return (
-    <ol className="stmt-list" data-depth={depth}>
+    <div className="stmt-list" data-depth={depth}>
       {!readOnly && <InsertPoint {...props} index={0} />}
-      {body.map((stmt, index) => (
-        <li key={stmt.id}>
-          <StatementCard {...props} stmt={stmt} index={index} />
-          {!readOnly && <InsertPoint {...props} index={index + 1} />}
-        </li>
-      ))}
-      {body.length === 0 && (
-        <li className="stmt-list__empty" aria-hidden={readOnly ? undefined : 'true'}>
-          nothing in here yet
-        </li>
-      )}
+      <ol className="stmt-list__items">
+        {body.map((stmt, index) => (
+          <li key={stmt.id}>
+            <StatementCard {...props} stmt={stmt} index={index} />
+            {!readOnly && <InsertPoint {...props} index={index + 1} />}
+          </li>
+        ))}
+        {body.length === 0 && (
+          <li className="stmt-list__empty">nothing in here yet</li>
+        )}
+      </ol>
       <span className="visually-hidden">
         {`${body.length} instruction${body.length === 1 ? '' : 's'} at level ${depth + 1}`}
       </span>
-    </ol>
+    </div>
   )
 }
 

@@ -10,13 +10,26 @@ static artifact deployable to GitHub Pages.
 
 | # | Workstream | Owner | Status | Evidence |
 |---|---|---|---|---|
-| 0 | Runtime + trace feasibility | Lead | **Done** | 48 semantic tests; browser check of production build at `/robot-brain-lab/` |
+| 0 | Runtime + trace feasibility | Lead | **Done** | 48 semantic tests; production build checked at `/robot-brain-lab/` |
 | 1 | Shared contracts | Lead | **Done** | `src/program/types.ts`, `src/runtime/types.ts`, `python/*.py` |
-| 2 | Brain workspace UI | Brain/UI | Not started | — |
-| 3 | Nested method editor + code reveal | Editor | Not started | — |
-| 4 | Mission content + contracts | Content | Not started | — |
-| 5 | Lesson shell, playback, persistence | Lead | Not started | — |
-| 6 | Build, Pages workflow, docs | Lead | Partial | subpath build verified; workflow not written |
+| 2 | Brain workspace UI | Brain/UI | **Done** | 79 layout tests; accessibility suite; live journeys |
+| 3 | Nested method editor + code reveal | Lead | **Done** | 22 edit tests; construction and code-reveal journeys |
+| 4 | Mission content + contracts | Content | **Done** | 46 tests, including that each case set catches its intended bug |
+| 5 | Lesson shell, playback, persistence | Lead | **Done** | 11 playback + 10 tool + 12 persistence tests; journeys |
+| 6 | Build, Pages workflow, docs | Lead | **Done** | subpath build verified in-browser; both workflows written |
+
+**Totals: 233 unit and semantic tests, 19 browser journeys. All passing.**
+
+## What remains before this is in front of a learner
+
+1. **Publication details are unresolved and deliberately not invented.** The
+   deployable artifact is verified; the GitHub owner/repository and root-vs-
+   project URL are not known. Nothing has been published.
+2. **Learner age and reading level are still unresolved.** Copy is short and
+   plain and text size is adjustable, but the reading level has not been set by
+   anyone who knows the learner.
+3. **No learner pilot has happened.** Every claim recorded here is a product
+   check. M4 is where learning evidence starts.
 
 ## M0 evidence (closed)
 
@@ -66,6 +79,34 @@ Measured on this machine, production build served under `/robot-brain-lab/`:
    the app, so nothing of theirs is lost.
 5. **The module frame's call/return events are suppressed.** They duplicated the
    first and last steps and would have shown as phantom instructions.
+
+## Defects found by driving the real product, and fixed
+
+Each was reproduced through the student's own interaction before the fix and
+re-driven afterwards; a unit test alone was not treated as proof.
+
+1. A returned object reachable only as a return value was absent from the
+   snapshot graph, so `return` showed a dangling reference.
+2. Reference counts lumped names, container slots and work-area holds into one
+   number, so "two names, one list" read as "3 references" — burying the point
+   of the mission. They now name their sources.
+3. Autosave could lose the student's most recent action inside its debounce
+   window. Manual operations now save immediately, and editor edits flush on
+   page hide.
+4. Card tools and insertion points appeared only on hover, so they did not
+   exist at all on a touch tablet; at `opacity: 0` they also swallowed clicks
+   meant for neighbouring controls.
+5. The sticky header covered any control scrolled or focused to the top of the
+   viewport.
+6. `--ink-faint`, `--name-tag` and `--draft` failed WCAG AA contrast (2.96,
+   4.18 and 3.0 against their own backgrounds).
+7. `<ol>` contained non-`<li>` children, which stops a screen reader treating
+   the instructions as a list.
+8. The brain's layout is computed in absolute pixels while fonts scaled with
+   the text-size control, so enlarging text broke the layout. The canvas now
+   zooms as one piece.
+9. A scope label kept its default `<p>` margin while absolutely positioned and
+   sat on top of the first name tag.
 
 ## Open questions for the user (not blocking)
 

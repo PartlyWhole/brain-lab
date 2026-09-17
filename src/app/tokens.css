@@ -20,7 +20,10 @@
   /* Ink */
   --ink: #33291f;
   --ink-soft: #6d5c49;
-  --ink-faint: #9b8873;
+  /* Meets WCAG AA (>=4.5:1) against paper, surface and sunk backgrounds at
+     small sizes. The previous #9b8873 was 2.96-3.36:1, which failed on all
+     three; faint must still mean readable. */
+  --ink-faint: #7d6754;
 
   /* Pip's accent */
   --pip: #1f7a8c;
@@ -28,9 +31,12 @@
   --pip-deep: #14555f;
 
   /* Semantic roles. Each is paired with a non-colour cue in the components. */
-  --name-tag: #b4530a;         /* name labels */
+  /* 4.94:1 on its own soft background; the previous #b4530a was 4.18:1.
+     Name labels are small text, so AA needs 4.5:1. */
+  --name-tag: #a34a08;         /* name labels */
   --name-tag-soft: #fbe7d4;
-  --draft: #8a7fb8;            /* draft, not yet a binding */
+  /* 4.65:1 on --draft-soft; the previous #8a7fb8 was 3.0:1. */
+  --draft: #6b5ea3;            /* draft, not yet a binding */
   --draft-soft: #ece8f7;
   --object-int: #2f6f4f;
   --object-str: #7a5ea8;

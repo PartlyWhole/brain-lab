@@ -14,7 +14,9 @@
   margin: var(--sp-2) 0 0;
 }
 
-.stmt-list {
+.stmt-list { display: flex; flex-direction: column; }
+
+.stmt-list__items {
   list-style: none;
   margin: 0;
   padding: 0;
