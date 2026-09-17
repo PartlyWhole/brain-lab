@@ -1,0 +1,115 @@
+/**
+ * Design tokens for Robot Brain Lab.
+ *
+ * Warm and clear, following the visual direction in the design document.
+ * Meaning is never carried by colour alone: every state that matters also has
+ * a shape, an icon or a text label, so the interface still reads for a student
+ * who cannot distinguish the hues.
+ */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --paper: #fdf8f1;
+  --surface: #fffdfa;
+  --surface-sunk: #f6eee3;
+  --surface-raised: #ffffff;
+  --border: #e3d5c2;
+  --border-strong: #c9b49a;
+
+  /* Ink */
+  --ink: #33291f;
+  --ink-soft: #6d5c49;
+  --ink-faint: #9b8873;
+
+  /* Pip's accent */
+  --pip: #1f7a8c;
+  --pip-soft: #d8eef2;
+  --pip-deep: #14555f;
+
+  /* Semantic roles. Each is paired with a non-colour cue in the components. */
+  --name-tag: #b4530a;         /* name labels */
+  --name-tag-soft: #fbe7d4;
+  --draft: #8a7fb8;            /* draft, not yet a binding */
+  --draft-soft: #ece8f7;
+  --object-int: #2f6f4f;
+  --object-str: #7a5ea8;
+  --object-list: #1f7a8c;
+  --object-bool: #8a6d1f;
+  --object-none: #6d5c49;
+
+  --good: #2f6f4f;
+  --good-soft: #dcefe2;
+  --warn: #9a5b12;
+  --warn-soft: #fbeddb;
+  --bad: #a33a2c;
+  --bad-soft: #fbe2de;
+  --running: #1f7a8c;
+
+  /* Type */
+  --font: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-scale: 1;
+  --fs-xs: calc(0.75rem * var(--text-scale));
+  --fs-sm: calc(0.875rem * var(--text-scale));
+  --fs-md: calc(1rem * var(--text-scale));
+  --fs-lg: calc(1.25rem * var(--text-scale));
+  --fs-xl: calc(1.6rem * var(--text-scale));
+
+  /* Space and shape */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 2px rgba(51, 41, 31, 0.08), 0 2px 8px rgba(51, 41, 31, 0.06);
+  --shadow-lift: 0 2px 4px rgba(51, 41, 31, 0.1), 0 8px 20px rgba(51, 41, 31, 0.12);
+
+  --focus: 0 0 0 3px #fff, 0 0 0 5.5px var(--pip);
+  --duration: 220ms;
+}
+
+/* Respect a stated preference for less motion: stepping still works, it just
+   stops animating between states. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration: 1ms; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: var(--radius-sm);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
