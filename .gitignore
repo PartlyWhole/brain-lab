@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .scratch/
+
+# The pinned Pyodide distribution is copied out of node_modules by
+# scripts/copy-runtime.mjs on every dev run, build and CI job, so it is a build
+# output, not source. Committing it would add ~13 MB to the repository for
+# every runtime version bump, forever.
+public/runtime/
