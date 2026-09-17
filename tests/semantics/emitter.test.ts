@@ -15,7 +15,6 @@ const id = () => `t${(seq += 1)}`
 
 const int = (n: number | string): Expr => ({ kind: 'int', id: id(), text: String(n) })
 const name = (n: string): Expr => ({ kind: 'name', id: id(), name: n })
-const str = (v: string): Expr => ({ kind: 'str', id: id(), value: v })
 const list = (...items: Expr[]): Expr => ({ kind: 'list', id: id(), items })
 const arith = (op: '+' | '-' | '*' | '//' | '%', left: Expr, right: Expr): Expr =>
   ({ kind: 'arith', id: id(), op, left, right })

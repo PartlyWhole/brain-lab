@@ -369,3 +369,58 @@ def run_commands(setup_source, commands, budgets=None):
                      "message": str(exc), "hint": None}
             break
     return {"snapshot": session.snapshot(), "applied": applied, "error": error}
+
+
+def check_state(session, check_source):
+    """Runs a mission's trusted state check against the live session.
+
+    The checker receives real objects, so it can ask about identity ("do these
+    two names reach the same list?") and not only about equality. That
+    distinction is the whole point of several missions.
+    """
+    def aliases(a, b):
+        return (a in session.bindings and b in session.bindings
+                and session.bindings[a] is session.bindings[b])
+
+    def names():
+        return dict(session.bindings)
+
+    ns = {
+        "__builtins__": __builtins__,
+        "aliases": aliases,
+        "same_object": lambda a, b: a is b,
+    }
+    exec(compile(check_source, "<mission-check>", "exec"), ns)
+    work = [{"slotId": e["slotId"], "label": e["label"], "object": e["object"]}
+            for e in session.work_area]
+    try:
+        done, message = ns["check_state"](names(), work, session.recorder.text(), aliases)
+    except Exception as exc:                          # noqa: BLE001
+        return {"done": False, "message": "The check could not run: %s" % exc}
+    return {"done": bool(done), "message": message}
+
+
+def run_commands_and_check(setup_source, commands, check_source=None, budgets=None):
+    """Replay a command prefix and, if the mission has one, grade the state."""
+    session = Session(setup_source, budgets)
+    applied = []
+    error = None
+    for i, command in enumerate(commands):
+        try:
+            outcome = session.apply(command)
+            applied.append({"index": i, "ok": True, "outcome": outcome})
+        except OperationError as exc:
+            error = {"index": i, "kind": "OperationError",
+                     "message": exc.message, "hint": exc.hint}
+            break
+        except Exception as exc:                      # noqa: BLE001
+            error = {"index": i, "kind": type(exc).__name__,
+                     "message": str(exc), "hint": None}
+            break
+
+    check = None
+    if check_source and error is None:
+        check = check_state(session, check_source)
+
+    return {"snapshot": session.snapshot(), "applied": applied,
+            "error": error, "check": check}

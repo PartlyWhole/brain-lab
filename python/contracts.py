@@ -98,7 +98,40 @@ def run_case(source, case, step_limit=20000):
     return {"ns": ns, "original": original, "identities": identities, "error": error}
 
 
-def check(source, cases, check_source):
+def diagnose(misconceptions, case, run):
+    """Finds the first authored misconception that matches a failing run.
+
+    The condition is evaluated with ``ns``, ``original``, ``identities``,
+    ``error`` and ``case`` supplied as GLOBALS, not locals. A comprehension in
+    the condition creates its own scope and cannot see an eval frame's locals,
+    so passing them as locals would raise NameError on exactly the conditions
+    that need them most.
+    """
+    if not misconceptions:
+        return None
+    env = {
+        "__builtins__": __builtins__,
+        "ns": run["ns"],
+        "original": run["original"],
+        "identities": run["identities"],
+        "error": run["error"],
+        "case": case,
+    }
+    for item in misconceptions:
+        condition = item.get("when")
+        if not condition:
+            continue
+        try:
+            if bool(eval(compile(condition, "<misconception>", "eval"), env)):
+                return {"id": item.get("id", ""), "feedback": item.get("feedback", "")}
+        except Exception:                             # noqa: BLE001
+            # A condition that cannot be evaluated must never break grading or
+            # be reported to a student as if it were their mistake.
+            continue
+    return None
+
+
+def check(source, cases, check_source, misconceptions=None):
     """Grades every case and returns a plain-data report.
 
     ``check_source`` is trusted curriculum code defining
@@ -124,10 +157,15 @@ def check(source, cases, check_source):
             "message": message,
             "error": run["error"],
             "hidden": bool(case.get("hidden", False)),
+            # Named only for a failing case: a misconception is an explanation
+            # of a mistake, not a remark about correct work.
+            "misconception": None if passed else diagnose(misconceptions, case, run),
         })
 
+    first_failure = next((r for r in results if not r["passed"]), None)
     return {
         "passed": all(r["passed"] for r in results) and len(results) > 0,
         "cases": results,
-        "firstFailure": next((r for r in results if not r["passed"]), None),
+        "firstFailure": first_failure,
+        "misconception": first_failure["misconception"] if first_failure else None,
     }

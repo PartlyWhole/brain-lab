@@ -1,0 +1,294 @@
+/* The nested method editor. Frames are nested boxes, so "inside the loop" is
+   visible as containment rather than implied by an arrow. */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+}
+
+.editor__empty {
+  color: var(--ink-faint);
+  font-style: italic;
+  margin: var(--sp-2) 0 0;
+}
+
+.stmt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stmt-list__empty {
+  color: var(--ink-faint);
+  font-size: var(--fs-xs);
+  padding: 0 var(--sp-3) var(--sp-1);
+}
+
+/* -- insertion points ------------------------------------------------ */
+
+.insert { position: relative; display: flex; align-items: center; min-height: 14px; }
+
+.insert__button {
+  width: 100%;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  /* Same reasoning as .card__tools: faint, never absent. A student on a
+     touchscreen has no hover to reveal it with. */
+  opacity: 0.45;
+  transition: opacity var(--duration), background var(--duration);
+  font-size: var(--fs-xs);
+  line-height: 1;
+}
+
+.insert:hover .insert__button,
+.insert__button:focus-visible,
+.insert__button[aria-expanded='true'] {
+  opacity: 1;
+  background: var(--pip-soft);
+  color: var(--pip-deep);
+}
+
+.insert__menu,
+.picker__list {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  min-width: 250px;
+  margin: var(--sp-1) 0 0;
+  padding: var(--sp-1);
+  list-style: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  max-height: 320px;
+  overflow: auto;
+}
+
+.insert__menu button,
+.picker__list button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1px;
+  padding: var(--sp-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.insert__menu button:hover,
+.picker__list button:hover { background: var(--pip-soft); }
+
+.picker__label { font-weight: 600; }
+.picker__hint { color: var(--ink-soft); font-size: var(--fs-xs); font-family: var(--mono); }
+.picker__empty { padding: var(--sp-2); color: var(--ink-faint); font-size: var(--fs-xs); }
+.picker__clear .picker__label { color: var(--bad); }
+
+/* -- cards ----------------------------------------------------------- */
+
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: var(--sp-2);
+  box-shadow: var(--shadow);
+}
+
+.card:focus-visible { box-shadow: var(--focus); outline: none; }
+
+/* The page header is sticky, so anything scrolled to the very top lands
+   underneath it. This keeps a focused or scrolled-to card clear of it. */
+.card, .insert, .chip { scroll-margin-top: 72px; scroll-margin-bottom: 24px; }
+
+.card--for, .card--if { border-left-color: var(--pip); background: var(--surface); }
+.card--error { border-color: var(--bad); }
+.card--draft { border-style: dashed; }
+
+/* The execution marker: a solid bar and a glyph. Never colour alone, and a
+   different treatment from the brain's reference arrows. */
+.card--executing {
+  border-left-color: var(--running);
+  border-left-width: 6px;
+  background: var(--pip-soft);
+}
+.card--visited { opacity: 0.72; }
+
+.card__row { display: flex; align-items: flex-start; gap: var(--sp-2); }
+
+.card__marker {
+  width: 1em;
+  flex: none;
+  color: var(--running);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.card__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.card__word { color: var(--ink-soft); }
+
+.card__name {
+  font: inherit;
+  font-weight: 700;
+  color: var(--name-tag);
+  background: var(--name-tag-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 1px var(--sp-2);
+  min-width: 4ch;
+}
+.card__name:disabled { opacity: 1; }
+.card__name::placeholder { color: var(--ink-faint); font-weight: 400; }
+
+.card__tools {
+  display: flex;
+  gap: 2px;
+  /* Always present and always clickable, just quieter until the card is
+     hovered or focused. Revealing these only on hover would hide them
+     completely on a touch tablet, which is one of the supported devices, and
+     an opacity-0 control still swallows clicks aimed at its neighbours. */
+  opacity: 0.4;
+  transition: opacity var(--duration);
+}
+.card:hover .card__tools,
+.card:focus-within .card__tools { opacity: 1; }
+
+.card__tools button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  width: 22px; height: 22px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  line-height: 1;
+  padding: 0;
+}
+.card__tools button:hover { background: var(--surface-sunk); color: var(--ink); }
+
+.card__problem { margin: var(--sp-1) 0 0 calc(1em + var(--sp-2)); font-size: var(--fs-xs); }
+.card__problem--draft { color: var(--ink-faint); }
+.card__problem--error { color: var(--bad); }
+
+.card__block {
+  margin: var(--sp-1) 0 0 var(--sp-4);
+  padding-left: var(--sp-2);
+  border-left: 2px dotted var(--border-strong);
+}
+
+.card__else {
+  margin: var(--sp-1) 0 0 var(--sp-2);
+  color: var(--ink-soft);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+/* -- expression chips ------------------------------------------------ */
+
+.chip-wrap { position: relative; display: inline-flex; align-items: center; gap: var(--sp-1); }
+
+.chip {
+  font: inherit;
+  border-radius: 999px;
+  padding: 1px var(--sp-2);
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-sunk);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.chip:disabled { cursor: default; }
+
+.chip--draft {
+  border-style: dashed;
+  border-color: var(--draft);
+  background: var(--draft-soft);
+  color: var(--draft);
+}
+
+.chip--error { border-color: var(--bad); background: var(--bad-soft); }
+
+.chip--name { background: var(--name-tag-soft); color: var(--name-tag); font-weight: 700; }
+.chip--int, .chip--str, .chip--bool { font-family: var(--mono); }
+
+.chip__mark { font-weight: 700; margin-right: 2px; }
+
+.chip__children {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-1);
+  border-left: 1px solid var(--border);
+}
+
+.chip__op { color: var(--ink-soft); font-family: var(--mono); }
+
+.chip__problem { display: none; }
+
+/* -- picker ---------------------------------------------------------- */
+
+.picker {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 260px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  padding: var(--sp-2);
+}
+
+.picker__title { margin: 0 0 var(--sp-1); font-weight: 700; font-size: var(--fs-xs); color: var(--ink-soft); }
+
+.picker .picker__list {
+  position: static;
+  box-shadow: none;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.picker__form { display: flex; flex-direction: column; gap: var(--sp-2); }
+.picker__form label { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-xs); }
+.picker__form input {
+  font: inherit;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.picker__form button {
+  font: inherit;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--pip);
+  background: var(--pip);
+  color: #fff;
+  cursor: pointer;
+  align-self: flex-start;
+}

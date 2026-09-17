@@ -25,6 +25,13 @@ export interface ManualResult {
   snapshot: unknown
   applied: unknown[]
   error: { index: number; kind: string; message: string; hint: string | null } | null
+  /** Present when the mission supplied a state check. */
+  check: { done: boolean; message: string } | null
+}
+
+export interface Misconception {
+  id: string
+  feedback: string
 }
 
 export interface ContractResult {
@@ -36,8 +43,11 @@ export interface ContractResult {
     message: string
     error: { kind: string; message: string; line: number | null } | null
     hidden: boolean
+    misconception: Misconception | null
   }[]
   firstFailure: ContractResult['cases'][number] | null
+  /** The authored explanation for the first failure, when one matches. */
+  misconception: Misconception | null
 }
 
 /** Absolute URL of the self-hosted runtime directory, honouring the base path. */
@@ -193,9 +203,16 @@ export class PythonRuntime {
     return RunResultSchema.parse(raw)
   }
 
-  async manual(setup: string, commands: unknown[]): Promise<ManualResult> {
+  async manual(
+    setup: string,
+    commands: unknown[],
+    checkSource = '',
+  ): Promise<ManualResult> {
     await this.start()
-    return this.send<ManualResult>({ type: 'manual', setup, commands }, 'manualResult')
+    return this.send<ManualResult>(
+      { type: 'manual', setup, commands, checkSource },
+      'manualResult',
+    )
   }
 
   async checkContract(
@@ -203,11 +220,12 @@ export class PythonRuntime {
     lineToCard: Record<number, string>,
     checkSource: string,
     cases: unknown[],
+    misconceptions: unknown[] = [],
   ): Promise<ContractResult> {
     await this.start()
     this.setStatus({ state: 'busy', message: 'Testing Pip’s method…' })
     return this.send<ContractResult>(
-      { type: 'checkContract', source, lineToCard, checkSource, cases },
+      { type: 'checkContract', source, lineToCard, checkSource, cases, misconceptions },
       'contractResult',
     )
   }

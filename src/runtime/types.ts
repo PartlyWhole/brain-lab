@@ -137,6 +137,7 @@ export const WorkerRequestSchema = z.discriminatedUnion('type', [
     /** Ordered semantic commands replayed from the mission setup. */
     setup: z.string().default(''),
     commands: z.array(z.unknown()),
+    checkSource: z.string().default(''),
   }),
   z.object({
     type: z.literal('checkContract'),
@@ -145,6 +146,7 @@ export const WorkerRequestSchema = z.discriminatedUnion('type', [
     lineToCard: z.record(z.string(), z.string()),
     checkSource: z.string(),
     cases: z.array(z.unknown()),
+    misconceptions: z.array(z.unknown()).default([]),
   }),
 ])
 export type WorkerRequest = z.infer<typeof WorkerRequestSchema>
@@ -236,4 +238,25 @@ export function referenceCounts(snapshot: Snapshot): Record<string, number> {
     else if (obj.type === 'dict') obj.entries.forEach((e) => { bump(e.key); bump(e.value) })
   }
   return counts
+}
+
+/* ------------------------------------------------------------------ */
+/* References the student can point at                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The canonical shape of a reference into the brain, mirroring the reference
+ * kinds `python/session.py` resolves. The brain's own `BrainReference` is
+ * structurally identical, so the two are interchangeable without either module
+ * importing the other.
+ */
+export type SelectableReference =
+  | { kind: 'name'; name: string }
+  | { kind: 'work'; slotId: string }
+  | { kind: 'slot'; target: SelectableReference; index: number }
+
+export function isSelectableReference(value: unknown): value is SelectableReference {
+  if (typeof value !== 'object' || value === null || !('kind' in value)) return false
+  const kind = (value as { kind: unknown }).kind
+  return kind === 'name' || kind === 'work' || kind === 'slot'
 }

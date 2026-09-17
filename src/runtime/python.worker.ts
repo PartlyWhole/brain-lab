@@ -107,11 +107,13 @@ json.dumps(observe.run_program(_rbl_source, _m, _setup_ns, _b))
           py,
           `
 import json, session
-json.dumps(session.run_commands(_rbl_setup, json.loads(_rbl_commands)))
+json.dumps(session.run_commands_and_check(
+    _rbl_setup, json.loads(_rbl_commands), _rbl_check or None))
 `,
           {
             _rbl_setup: msg.setup ?? '',
             _rbl_commands: JSON.stringify(msg.commands ?? []),
+            _rbl_check: msg.checkSource ?? '',
           },
         )
         post({ type: 'manualResult', requestId, result })
@@ -124,12 +126,14 @@ json.dumps(session.run_commands(_rbl_setup, json.loads(_rbl_commands)))
           py,
           `
 import json, contracts
-json.dumps(contracts.check(_rbl_source, json.loads(_rbl_cases), _rbl_check))
+json.dumps(contracts.check(_rbl_source, json.loads(_rbl_cases), _rbl_check,
+                           json.loads(_rbl_misconceptions)))
 `,
           {
             _rbl_source: msg.source,
             _rbl_cases: JSON.stringify(msg.cases ?? []),
             _rbl_check: msg.checkSource ?? '',
+            _rbl_misconceptions: JSON.stringify(msg.misconceptions ?? []),
           },
         )
         post({ type: 'contractResult', requestId, result })

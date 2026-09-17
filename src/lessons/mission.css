@@ -1,0 +1,213 @@
+.mission {
+  display: grid;
+  gap: var(--sp-3);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-areas:
+    'header header'
+    'brain  work'
+    'controls controls'
+    'feedback feedback';
+  padding: var(--sp-4);
+  max-width: 1500px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.mission__header { grid-area: header; }
+.mission__brain { grid-area: brain; position: relative; min-height: 320px; }
+.mission__work { grid-area: work; display: flex; flex-direction: column; gap: var(--sp-3); }
+.mission__controls { grid-area: controls; }
+.mission__feedback { grid-area: feedback; }
+
+/* Tablet widths: one column, brain first — it is the thing being reasoned
+   about, so it should not be pushed below the editor. */
+@media (max-width: 1080px) {
+  .mission {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'header' 'brain' 'work' 'controls' 'feedback';
+  }
+}
+
+.mission__purpose {
+  margin: 0;
+  font-size: var(--fs-lg);
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.pip-badge {
+  background: var(--pip);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex: none;
+}
+
+.mission__prompt { margin: var(--sp-1) 0 0; color: var(--ink-soft); }
+
+.mission__brain-idle {
+  position: absolute;
+  inset: auto var(--sp-4) var(--sp-4);
+  color: var(--ink-faint);
+  font-size: var(--fs-sm);
+  text-align: center;
+  pointer-events: none;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-3);
+}
+
+.panel__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+
+.panel__title {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+.mission__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-3);
+}
+
+.controls__group { display: flex; align-items: center; gap: var(--sp-2); }
+.controls__label { font-size: var(--fs-sm); color: var(--ink-soft); }
+.controls__position { font-size: var(--fs-sm); color: var(--ink-soft); min-width: 11ch; }
+
+.mission__controls button,
+.mission__controls select {
+  font: inherit;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.mission__controls button:disabled { opacity: 0.45; cursor: default; }
+
+.button--primary { background: var(--pip); border-color: var(--pip); color: #fff; }
+.button--go { background: var(--good); border-color: var(--good); color: #fff; }
+.button--stop { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+
+.note { margin: var(--sp-2) 0 0; font-size: var(--fs-sm); color: var(--ink-soft); }
+.note--bad { color: var(--bad); }
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--pip-deep);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.report {
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.report--good { background: var(--good-soft); border-color: var(--good); }
+.report--bad { background: var(--warn-soft); border-color: var(--warn); }
+.report p { margin: 0; }
+.report ul { margin: var(--sp-2) 0 0; padding-left: var(--sp-5); }
+.report li { margin-bottom: var(--sp-1); }
+
+.hints { margin-top: var(--sp-3); }
+.hints__list { margin: 0 0 var(--sp-2); padding-left: var(--sp-5); color: var(--ink-soft); font-size: var(--fs-sm); }
+.hints__end { color: var(--ink-faint); font-size: var(--fs-xs); margin: 0; }
+
+/* -- tool palette ---------------------------------------------------- */
+
+.tools { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
+
+.tool {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  cursor: pointer;
+  color: inherit;
+}
+
+.tool:hover { border-color: var(--pip); background: var(--pip-soft); }
+.tool--active { border-color: var(--pip); border-width: 2px; background: var(--pip-soft); }
+
+.tool__label { font-weight: 700; }
+.tool__summary { color: var(--ink-soft); font-size: var(--fs-sm); }
+.tool__facts { color: var(--ink-faint); font-size: var(--fs-xs); }
+
+/* The preparation panel is visually distinct from the brain so "getting ready"
+   never looks like "already happened". */
+.panel--prepare {
+  border-style: dashed;
+  border-color: var(--draft);
+  background: var(--draft-soft);
+}
+
+.prepare__sentence { margin: 0 0 var(--sp-2); font-weight: 700; }
+.prepare__ask { margin: 0 0 var(--sp-2); color: var(--ink-soft); font-size: var(--fs-sm); }
+
+.prepare__form { display: flex; gap: var(--sp-2); align-items: flex-end; margin-bottom: var(--sp-2); }
+.prepare__form label { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); }
+.prepare__form input, .prepare__form select {
+  font: inherit;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.prepare__form button {
+  font: inherit;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--pip);
+  background: var(--pip);
+  color: #fff;
+  cursor: pointer;
+}
+
+.prepare__actions { display: flex; gap: var(--sp-2); }
+.prepare__actions button {
+  font: inherit;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  cursor: pointer;
+}
+.prepare__actions .button--primary { background: var(--pip); border-color: var(--pip); color: #fff; }
+.prepare__actions button:disabled { opacity: 0.45; cursor: default; }
+
+.controls__aside { margin: 0; color: var(--ink-faint); font-size: var(--fs-xs); flex-basis: 100%; }
+
+.report__why {
+  margin-top: var(--sp-2) !important;
+  padding: var(--sp-2);
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--warn);
+}
